@@ -1,25 +1,88 @@
 import 'package:flutter/material.dart';
-import 'package:wajiha_game_core/wajiha_game_core.dart';
-import 'game_screen.dart';
+import 'package:flutter/services.dart';
+import 'services/audio_service.dart';
+import 'services/settings_service.dart';
+import 'screens/splash_screen.dart';
 
-void main() => runApp(const HeartsApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  final audio = HeartsAudio();
+  final settings = HeartsSettings();
+  await settings.load();
+  audio.configure(
+    musicOn: settings.musicOn,
+    sfxOn: settings.sfxOn,
+    volume: settings.volume,
+  );
+  // Keep audio in sync when settings change anywhere.
+  settings.addListener(() {
+    audio.configure(
+      musicOn: settings.musicOn,
+      sfxOn: settings.sfxOn,
+      volume: settings.volume,
+    );
+    if (!settings.musicOn) {
+      audio.stopMusic();
+    }
+  });
+  runApp(HeartsApp(audio: audio, settings: settings));
+}
 
-class HeartsApp extends StatelessWidget {
-  const HeartsApp({super.key});
+class HeartsApp extends StatefulWidget {
+  final HeartsAudio audio;
+  final HeartsSettings settings;
+  const HeartsApp(
+      {super.key, required this.audio, required this.settings});
+
+  @override
+  State<HeartsApp> createState() => _HeartsAppState();
+}
+
+class _HeartsAppState extends State<HeartsApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The game screen also observes lifecycle for engine pausing; the app
+    // shell owns music pause/resume so it always happens exactly once.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      widget.audio.onAppPaused();
+    } else if (state == AppLifecycleState.resumed) {
+      widget.audio.onAppResumed();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.audio.dispose();
+    widget.settings.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return GameShell(
-      variant: ShellVariant.cozyPaper,
-      title: 'Hearts',
-      tagline: 'Dodge the hearts, ditch the queen, and become the lowest scorer in the room!',
-      emoji: '♥️',
-      slug: 'hearts',
-      howToPlay:
-          '• You + 3 rivals, 13 cards each. Avoid taking hearts (1 pt each) and the Q♠ (13 pts!).\n• Pass 3 cards before each hand — left, right, across, then no pass.\n• Follow suit if you can. Hearts can\'t lead until broken.\n• Take ALL 26 points to shoot the moon 🌙 — you get 0, everyone else gets 26!\n• Lowest score wins. First to 100 ends the match. Play solo vs bots or pass-and-play!',
-      playerOptions: const [1, 4],
-      supportsBots: false,
-      gameBuilder: (ctx, players, cb) => HeartsScreen(players: players, callbacks: cb),
+    return MaterialApp(
+      title: 'Hearts by WAJIHA',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        fontFamily: 'Roboto',
+      ),
+      home: SplashScreen(
+        audio: widget.audio,
+        settings: widget.settings,
+      ),
     );
   }
 }
