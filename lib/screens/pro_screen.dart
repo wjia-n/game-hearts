@@ -25,18 +25,12 @@ class _ProScreenState extends State<ProScreen> {
   @override
   void initState() {
     super.initState();
-    widget.store.proPurchased.addListener(_onPro);
     widget.store.lastThanks.addListener(_onThanks);
     widget.settings.addListener(_refresh);
     widget.store.init();
   }
 
-  void _onPro() {
-    if (widget.store.proPurchased.value) {
-      widget.settings.setPro(true);
-    }
-  }
-
+  
   void _onThanks() {
     final msg = widget.store.lastThanks.value;
     if (msg != null && mounted) {
@@ -51,7 +45,6 @@ class _ProScreenState extends State<ProScreen> {
 
   @override
   void dispose() {
-    widget.store.proPurchased.removeListener(_onPro);
     widget.store.lastThanks.removeListener(_onThanks);
     widget.settings.removeListener(_refresh);
     super.dispose();
@@ -100,13 +93,7 @@ class _ProScreenState extends State<ProScreen> {
                   _NotConfiguredCard(
                       theme: theme, error: store.error)
                 else
-                  _BuyCard(
-                    theme: theme,
-                    store: store,
-                    audio: widget.audio,
-                  ),
-                const SizedBox(height: 16),
-                _TipJar(
+                                  _TipJar(
                     theme: theme,
                     store: store,
                     audio: widget.audio),
@@ -284,80 +271,6 @@ class _NotConfiguredCard extends StatelessWidget {
                     color: theme.ivoryDim, fontSize: 11)),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _BuyCard extends StatelessWidget {
-  final HeartsThemeDef theme;
-  final HeartsStore store;
-  final HeartsAudio audio;
-  const _BuyCard(
-      {required this.theme,
-      required this.store,
-      required this.audio});
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: store.purchaseInProgress,
-      builder: (_, inProgress, __) => Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(colors: [
-            theme.accent.withValues(alpha: 0.3),
-            theme.accent.withValues(alpha: 0.1),
-          ]),
-          border: Border.all(color: theme.accent, width: 1.5),
-        ),
-        child: Column(
-          children: [
-            Text('Unlock everything, forever',
-                style: TextStyle(
-                    color: theme.ivory,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800)),
-            const SizedBox(height: 4),
-            Text(
-                store.proProduct != null
-                    ? store.proProduct!.price
-                    : 'One-time purchase',
-                style: TextStyle(
-                    color: theme.accentLight,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            FeltButton(
-              label: inProgress
-                  ? 'Working…'
-                  : '👑  Go PRO',
-              onPressed:
-                  inProgress ? null : () => store.buyPro(),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed:
-                  inProgress ? null : () => store.restore(),
-              child: Text('Restore purchases',
-                  style: TextStyle(
-                      color: theme.ivoryDim, fontSize: 13)),
-            ),
-            ValueListenableBuilder<String?>(
-              valueListenable: store.purchaseError,
-              builder: (_, err, __) => err == null
-                  ? const SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(err,
-                          style: const TextStyle(
-                              color: Colors.redAccent,
-                              fontSize: 12)),
-                    ),
-            ),
-          ],
-        ),
       ),
     );
   }
