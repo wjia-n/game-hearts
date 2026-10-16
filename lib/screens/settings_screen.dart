@@ -4,6 +4,7 @@ import '../services/audio_service.dart';
 import '../services/settings_service.dart';
 import '../theme/hearts_themes.dart';
 import '../widgets/card_table.dart';
+import '../transfer/transfer_ui.dart';
 
 const _storeUrl =
     'https://play.google.com/store/apps/details?id=com.gameswajiha.hearts';
@@ -59,6 +60,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding:
                   const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
+              TransferSaveTile(gameSlug: 'hearts'),
                 Row(
                   children: [
                     IconButton(
