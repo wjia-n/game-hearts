@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:share_plus/share_plus.dart';
@@ -362,7 +363,7 @@ class _ProBadge extends StatelessWidget {
                 offset: const Offset(0, 2))
           ],
         ),
-        child: const Text('PRO',
+        child: Text(defaultTargetPlatform == TargetPlatform.iOS ? '⭐ Gold Star' : 'PRO',
             style: TextStyle(
                 color: Color(0xFF2E1C0F),
                 fontWeight: FontWeight.w800,
